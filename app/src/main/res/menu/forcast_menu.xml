@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:myapp="http://schemas.android.com/apk/res-auto" >>
+      xmlns:myapp="http://schemas.android.com/apk/res-auto">>
+
     <item
-        android:title="@string/refresh"
-        android:id="@+id/refresh"
-        myapp:showAsAction="never"
-        />
+            android:title="@string/setting"
+            android:id="@+id/setting"
+            myapp:showAsAction="never"
+    />
+
+    <item
+            android:title="@string/refresh"
+            android:id="@+id/refresh"
+            myapp:showAsAction="never"
+    />
+
+    <item
+            android:title="@string/view_action"
+            android:id="@+id/view_action"
+            myapp:showAsAction="never"
+    />
 </menu>

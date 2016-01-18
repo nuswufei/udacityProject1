@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.text.format.Time;
 import android.util.Log;
@@ -32,18 +33,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link ForcastFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link ForcastFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class ForcastFragment extends Fragment {
     final static String tag = ForcastFragment.class.getSimpleName();
     ArrayAdapter<String> madapter;
+
     public ForcastFragment() {
 
     }
@@ -61,18 +54,8 @@ public class ForcastFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_forcast, container, false);
         ListView listView = (ListView) rootView.findViewById(R.id.forcast_list);
 
-        String[] data = {
-                "Mon 6/23 - Sunny - 31/17",
-                "Tue 6/24 - Foggy - 21/8",
-                "Wed 6/25 - Cloudy - 22/17",
-                "Thurs 6/26 - Rainy - 18/11",
-                "Fri 6/27 - Foggy - 21/10",
-                "Sat 6/28 - TRAPPED IN WEATHERSTATION - 23/18",
-                "Sun 6/29 - Sunny - 20/7"
-        };
-
         List<String> weekForecast
-                = new ArrayList<String>(Arrays.asList(data));
+                = new ArrayList<String>();
         madapter
                 = new ArrayAdapter<String>(getContext(),
                 R.layout.item_list,
@@ -98,12 +81,36 @@ public class ForcastFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        new DownloadForcastTask().execute(
+                PreferenceManager.getDefaultSharedPreferences(getContext()).getString(getString(R.string.pref_location_key), "")
+        );
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // handle item selection
         switch (item.getItemId()) {
             case R.id.refresh:
-                new DownloadForcastTask().execute("95008");
-                Log.v(tag, "refresh clicked!!!!!");
+                new DownloadForcastTask().execute(
+                        PreferenceManager.getDefaultSharedPreferences(getContext()).getString(getString(R.string.pref_location_key), "")
+                );
+                return true;
+            case R.id.setting:
+                Intent intent = new Intent(getContext(), SettingActivity.class);
+                startActivity(intent);
+                return true;
+            case R.id.view_action:
+                String zipCode = PreferenceManager.getDefaultSharedPreferences(getContext()).getString(getString(R.string.pref_location_key), getString(R.string.defaultlocation));
+                Uri geoLocation = Uri.parse("geo:0,0?").buildUpon()
+                        .appendQueryParameter("q", zipCode)
+                        .build();
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW);
+                mapIntent.setData(geoLocation);
+                if (mapIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+                    startActivity(mapIntent);
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -119,6 +126,11 @@ public class ForcastFragment extends Fragment {
         }
 
         private String formatHighLow(double high, double low) {
+            String tempUnit = PreferenceManager.getDefaultSharedPreferences(getContext()).getString(getString(R.string.temp_unit_key), "celsius");
+            if (!tempUnit.equals("celsius")) {
+                high = high * 1.8 + 32;
+                low = low * 1.8 + 32;
+            }
             return Math.round(high) + "/" + Math.round(low);
         }
 
@@ -142,7 +154,7 @@ public class ForcastFragment extends Fragment {
             dayTime = new Time();
 
             String[] resultStrs = new String[dayNum];
-            for(int i = 0; i < weatherArray.length(); i++) {
+            for (int i = 0; i < weatherArray.length(); i++) {
                 String day;
                 String description;
                 String highAndLow;
@@ -150,7 +162,7 @@ public class ForcastFragment extends Fragment {
                 JSONObject dayForecast = weatherArray.getJSONObject(i);
 
                 long dateTime;
-                dateTime = dayTime.setJulianDay(julianStartDay+i);
+                dateTime = dayTime.setJulianDay(julianStartDay + i);
                 day = getReadableTime(dateTime);
 
                 JSONObject weatherObject = dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
@@ -170,9 +182,10 @@ public class ForcastFragment extends Fragment {
 
             return resultStrs;
         }
+
         @Override
         protected String[] doInBackground(String... params) {
-            if(params.length == 0) {
+            if (params.length == 0) {
                 return null;
             }
 
@@ -254,9 +267,9 @@ public class ForcastFragment extends Fragment {
 
         @Override
         protected void onPostExecute(String[] forcasts) {
-            if(forcasts == null) return;
+            if (forcasts == null) return;
             madapter.clear();
-            for(String forcastStr : forcasts) {
+            for (String forcastStr : forcasts) {
                 madapter.add(forcastStr);
             }
         }
