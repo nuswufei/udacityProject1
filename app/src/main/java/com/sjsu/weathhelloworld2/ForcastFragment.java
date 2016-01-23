@@ -83,7 +83,7 @@ public class ForcastFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        new DownloadForcastTask().execute(
+        new FetchWeatherTask(getContext(), madapter).execute(
                 PreferenceManager.getDefaultSharedPreferences(getContext()).getString(getString(R.string.pref_location_key), "")
         );
     }
@@ -93,7 +93,7 @@ public class ForcastFragment extends Fragment {
         // handle item selection
         switch (item.getItemId()) {
             case R.id.refresh:
-                new DownloadForcastTask().execute(
+                new FetchWeatherTask(getContext(), madapter).execute(
                         PreferenceManager.getDefaultSharedPreferences(getContext()).getString(getString(R.string.pref_location_key), "")
                 );
                 return true;
@@ -117,161 +117,5 @@ public class ForcastFragment extends Fragment {
         }
     }
 
-    class DownloadForcastTask extends AsyncTask<String, Void, String[]> {
-        final String LOG_TAG = DownloadForcastTask.class.getSimpleName().toString();
 
-        private String getReadableTime(long time) {
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE MMM dd");
-            return simpleDateFormat.format(time);
-        }
-
-        private String formatHighLow(double high, double low) {
-            String tempUnit = PreferenceManager.getDefaultSharedPreferences(getContext()).getString(getString(R.string.temp_unit_key), "celsius");
-            if (!tempUnit.equals("celsius")) {
-                high = high * 1.8 + 32;
-                low = low * 1.8 + 32;
-            }
-            return Math.round(high) + "/" + Math.round(low);
-        }
-
-        private String[] getForcastFromJson(String jsonStr, int dayNum) throws JSONException {
-            final String OWM_LIST = "list";
-            final String OWM_WEATHER = "weather";
-            final String OWM_TEMPERATURE = "temp";
-            final String OWM_MAX = "max";
-            final String OWM_MIN = "min";
-            final String OWM_DESCRIPTION = "main";
-
-            JSONObject forecastJson = new JSONObject(jsonStr);
-            JSONArray weatherArray = forecastJson.getJSONArray(OWM_LIST);
-
-            Time dayTime = new Time();
-            dayTime.setToNow();
-
-            int julianStartDay = Time.getJulianDay(System.currentTimeMillis(), dayTime.gmtoff);
-
-            // now we work exclusively in UTC
-            dayTime = new Time();
-
-            String[] resultStrs = new String[dayNum];
-            for (int i = 0; i < weatherArray.length(); i++) {
-                String day;
-                String description;
-                String highAndLow;
-
-                JSONObject dayForecast = weatherArray.getJSONObject(i);
-
-                long dateTime;
-                dateTime = dayTime.setJulianDay(julianStartDay + i);
-                day = getReadableTime(dateTime);
-
-                JSONObject weatherObject = dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
-                description = weatherObject.getString(OWM_DESCRIPTION);
-
-                JSONObject temperatureObject = dayForecast.getJSONObject(OWM_TEMPERATURE);
-                double high = temperatureObject.getDouble(OWM_MAX);
-                double low = temperatureObject.getDouble(OWM_MIN);
-
-                highAndLow = formatHighLow(high, low);
-                resultStrs[i] = day + " - " + description + " - " + highAndLow;
-            }
-
-            for (String s : resultStrs) {
-                Log.v(LOG_TAG, "Forecast entry: " + s);
-            }
-
-            return resultStrs;
-        }
-
-        @Override
-        protected String[] doInBackground(String... params) {
-            if (params.length == 0) {
-                return null;
-            }
-
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-            String forecastJsonStr = null;
-
-            String format = "json";
-            String units = "metric";
-            int numDays = 7;
-
-            try {
-                final String FORECAST_BASE_URL =
-                        "http://api.openweathermap.org/data/2.5/forecast/daily?";
-                final String QUERY_PARAM = "q";
-                final String FORMAT_PARAM = "mode";
-                final String UNITS_PARAM = "units";
-                final String DAYS_PARAM = "cnt";
-                final String APPID_PARAM = "APPID";
-                final String APPID = "b1c02bd006f6a0f203c3ef33357a7071";
-                Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
-                        .appendQueryParameter(QUERY_PARAM, params[0])
-                        .appendQueryParameter(FORMAT_PARAM, format)
-                        .appendQueryParameter(UNITS_PARAM, units)
-                        .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
-                        .appendQueryParameter(APPID_PARAM, APPID)
-                        .build();
-
-                URL url = new URL(builtUri.toString());
-
-                Log.v(LOG_TAG, "Built URI " + builtUri.toString());
-
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-                if (inputStream == null) {
-                    return null;
-                }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    buffer.append(line + "\n");
-                }
-
-                if (buffer.length() == 0) {
-                    return null;
-                }
-                forecastJsonStr = buffer.toString();
-                Log.v(LOG_TAG, "Forecast string: " + forecastJsonStr);
-            } catch (IOException e) {
-                Log.e(LOG_TAG, "Error ", e);
-                return null;
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e(LOG_TAG, "Error closing stream", e);
-                    }
-                }
-            }
-
-            try {
-                return getForcastFromJson(forecastJsonStr, numDays);
-            } catch (JSONException e) {
-                Log.e(LOG_TAG, e.getMessage(), e);
-                e.printStackTrace();
-            }
-
-            // This will only happen if there was an error getting or parsing the forecast.
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String[] forcasts) {
-            if (forcasts == null) return;
-            madapter.clear();
-            for (String forcastStr : forcasts) {
-                madapter.add(forcastStr);
-            }
-        }
-    }
 }
