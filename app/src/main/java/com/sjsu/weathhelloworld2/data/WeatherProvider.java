@@ -23,9 +23,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.util.Log;
 
 public class WeatherProvider extends ContentProvider {
-
+    String tag = WeatherProvider.class.getSimpleName();
     // The URI Matcher used by this content provider.
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     private WeatherDbHelper mOpenHelper;
@@ -330,6 +331,7 @@ public class WeatherProvider extends ContentProvider {
                     db.endTransaction();
                 }
                 getContext().getContentResolver().notifyChange(uri, null);
+                Log.v(tag, returnCount + " lines inserted");
                 return returnCount;
             default:
                 return super.bulkInsert(uri, values);
