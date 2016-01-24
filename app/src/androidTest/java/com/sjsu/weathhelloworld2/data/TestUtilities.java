@@ -11,7 +11,6 @@ import android.os.HandlerThread;
 import android.test.AndroidTestCase;
 import com.sjsu.weathhelloworld2.data.utils.PollingCheck;
 
-
 import java.util.Map;
 import java.util.Set;
 

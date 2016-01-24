@@ -1,13 +1,10 @@
 package com.sjsu.weathhelloworld2;
 
+import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 
 public class SettingActivity extends PreferenceActivity implements Preference.OnPreferenceChangeListener {
     final static String tag = SettingActivity.class.getSimpleName();

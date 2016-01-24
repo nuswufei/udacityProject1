@@ -14,7 +14,6 @@ import android.util.Log;
 import android.view.*;
 import android.widget.TextView;
 import com.sjsu.weathhelloworld2.data.WeatherContract.WeatherEntry;
-import com.sjsu.weathhelloworld2.data.WeatherContract.LocationEntry;
 
 /**
  * A simple {@link Fragment} subclass.

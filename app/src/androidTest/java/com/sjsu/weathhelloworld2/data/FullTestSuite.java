@@ -16,7 +16,6 @@
 package com.sjsu.weathhelloworld2.data;
 
 import android.test.suitebuilder.TestSuiteBuilder;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 

@@ -18,9 +18,8 @@ package com.sjsu.weathhelloworld2.data;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-
-import com.sjsu.weathhelloworld2.data.WeatherContract.WeatherEntry;
 import com.sjsu.weathhelloworld2.data.WeatherContract.LocationEntry;
+import com.sjsu.weathhelloworld2.data.WeatherContract.WeatherEntry;
 /**
  * Manages a local database for weather data.
  */
