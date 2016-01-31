@@ -14,12 +14,12 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import com.sjsu.weathhelloworld2.data.WeatherContract;
 
-public class ForcastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
-    final static String tag = ForcastFragment.class.getSimpleName();
+public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+    final static String tag = ForecastFragment.class.getSimpleName();
     ForecastAdapter madapter;
     private static final int FORECAST_LOADER = 0;
 
-    public ForcastFragment() {
+    public ForecastFragment() {
 
     }
 
@@ -62,6 +62,7 @@ public class ForcastFragment extends Fragment implements LoaderManager.LoaderCal
                 }
             }
         });
+        cursor.close();
         return rootView;
     }
 
